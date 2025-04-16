@@ -1,0 +1,22 @@
+name: postgressd
+version: v2alpha
+type: depot
+layer: user
+depot:
+  type: jdbc
+  description: Default Postgres depot
+  external: true
+  secrets:
+    - name: postgressd-rw
+      keys:
+        - postgressd-rw
+      allkeys: true
+    - name: postgressd-r
+      keys:
+        - postgressd-r
+      allkeys: true
+  jdbc:
+    subprotocol: postgresql
+    host: modern-postgresql-server.postgres.database.azure.com
+    port: 5432
+    database: trainingdb

@@ -59,11 +59,9 @@ workflow:
 
             outputs:
               - name: final
-                dataset: dataos://icebase:sachin_exp/purchase_data?acl=rw
-                format: Iceberg
+                dataset: dataos://postgressd:public/purchase_data?acl=rw
+                driver: org.postgresql.Driver
+                format: jdbc
+                title: Purchase Dataset
                 options:
                   saveMode: overwrite
-                  iceberg:
-                    properties:
-                      write.format.default: parquet
-                      write.metadata.compression-codec: gzip
