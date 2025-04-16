@@ -1,0 +1,64 @@
+version: v1
+name: wf-product-data-sd
+type: workflow
+tags:
+  - crm
+description: Ingesting product data in lakehouse
+workflow:
+  # schedule:
+  #   cron: '00 20 * * *'
+  #  # endOn: '2023-12-12T22:00:00Z'
+  #   concurrencyPolicy: Forbid
+  dag:
+    - name: dg-product-data
+      spec:
+        tags:
+          - crm
+        stack: flare:6.0
+        compute: runnable-default
+        stackSpec:
+          driver:
+            coreLimit: 2000m
+            cores: 1
+            memory: 2000m
+          executor:
+            coreLimit: 2000m
+            cores: 1
+            instances: 1
+            memory: 2000m
+          job:
+            explain: true
+            logLevel: INFO
+            inputs:
+              - name: product_data
+                dataset: dataos://thirdparty01:onboarding/product.csv?acl=rw
+                format: csv
+                options:
+                  inferSchema: true
+
+            steps:
+              - sequence:
+                  - name: final
+                    sql: >
+                      SELECT 
+                        CAST(customer_id AS DOUBLE) as customer_id,
+                        product_id, 
+                        product_category, 
+                        product_name, 
+                        CAST(price AS DOUBLE) as price
+                      FROM product_data
+
+            outputs:
+              - name: final
+                dataset: dataos://icebase:sachin_exp/product_data?acl=rw
+                format: Iceberg
+                options:
+                  saveMode: overwrite
+                  iceberg:
+                    properties:
+                      write.format.default: parquet
+                      write.metadata.compression-codec: gzip
+                    # partitionSpec:
+                    #   - type: day
+                    #     column: date_time
+                    #     name: day

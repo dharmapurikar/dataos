@@ -1,0 +1,59 @@
+name: soda-customer-quality-sd
+version: v1
+type: workflow
+tags:
+  - workflow
+  - soda-checks
+description: Applying quality checks for the customer data
+workspace: public
+workflow:
+  dag:
+    - name: soda-customer-quality
+      spec:
+        stack: soda+python:1.0
+        compute: runnable-default
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 250Mi
+          limits:
+            cpu: 1000m
+            memory: 250Mi
+        logLevel: INFO
+        stackSpec:
+          inputs:
+            - dataset: dataos://icebase:sachin_exp/customer_data
+              options:
+                engine: minerva
+                clusterName: miniature
+              profile:
+                columns:
+                  - include *
+              checks:
+                - schema:
+                    name: Data type of birth year should be integer
+                    fail:
+                      when wrong column type:
+                        birth_year: bigint
+                    attributes:
+                      category: Schema
+                - freshness(created_at) < 7d:
+                    name: If data is older than 7 days
+                    attributes:
+                      category: Freshness
+                - invalid_count(customer_id) = 1:
+                    name: Customer ID should not be zero
+                    attributes:
+                      category: Validity
+                - missing_count(customer_id) = 0:
+                    name: Customer ID should not be missing
+                    attributes:
+                      category: Completeness
+                - duplicate_count(customer_id) = 0:
+                    name: Customer ID should not be duplicated
+                    attributes:
+                      category: Uniqueness
+                - avg_length(country) > 2:
+                    name: Average length of country should be more than 2
+                    attributes:
+                      category: Accuracy

@@ -1,0 +1,26 @@
+version: v1
+name: wf-customer-data-sd
+type: workflow
+workflow:
+  dag:
+    - name: dg-customer-data
+      spec:
+        stack: flare:6.0
+        compute: runnable-default
+        stackSpec:
+          inputs:
+            - name: customer_data
+              dataset: dataos://thirdparty01:onboarding/customer.csv
+              format: csv
+          steps:
+            - sequence:
+                - name: final
+                  sql: >
+                    SELECT
+                      CAST(customer_id AS LONG) AS customer_id,
+                      CAST(income AS DOUBLE) AS income
+                    FROM customer_data
+          outputs:
+            - name: final
+              dataset: dataos://icebase:sachin_exp/customer_data?acl=rw
+              format: Iceberg
